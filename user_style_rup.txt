@@ -1,0 +1,431 @@
+=== Calculate User’s SKU PVs as % of User’s Total PVs
+
+WITH users_pv_count AS (
+  SELECT
+      events.userid AS user_id
+      , COUNT(events.userid) AS user_pv_count
+    FROM
+      snowplow.kinesisdata AS events
+    WHERE
+      events.sku IS NOT NULL
+      AND events.userid IS NOT NULL
+      AND events.sku IS NOT NULL
+      AND (
+        events.eventname ILIKE 'Page View'
+        )
+    group by
+      events.userid
+)
+
+select
+  dotandbobi.users.user_id
+  , variants.sku
+  , variants.style
+  , users_pv_count.user_pv_count as user_total_pvs
+  , count(variants.style) as user_sku_pv_count
+  , case 
+    WHEN variants.style ilike '%boho%' THEN ((count(variants.style) * 100 / float4(users_pv_count.user_pv_count)))::numeric(7,2) 
+    else 0
+    end as boho_percent
+  , case 
+    WHEN variants.style ilike '%contemporary%' THEN ((count(variants.style) * 100 / float4(users_pv_count.user_pv_count)))::numeric(7,2)
+    else 0
+    end as contemporary_percent
+  , case 
+    WHEN variants.style ilike '%eclectic%' THEN ((count(variants.style) * 100 / float4(users_pv_count.user_pv_count)))::numeric(7,2) 
+    else 0
+    end as eclectic_percent
+  , case 
+    WHEN variants.style ilike '%industrial%' THEN ((count(variants.style) * 100 / float4(users_pv_count.user_pv_count)) )::numeric(7,2)
+    else 0
+    end as industrial_percent
+  , case 
+    WHEN variants.style ilike '%mid-century%' THEN ((count(variants.style) * 100 / float4(users_pv_count.user_pv_count)) )::numeric(7,2) 
+    else 0
+    end as mid_century_percent
+  , case 
+    WHEN variants.style ilike '%modern%' THEN ((count(variants.style) * 100 / float4(users_pv_count.user_pv_count)) )::numeric(7,2)
+    else 0
+    end as modern_percent
+  , case 
+    WHEN variants.style ilike '%organic%' THEN ((count(variants.style) * 100 / float4(users_pv_count.user_pv_count)) )::numeric(7,2) 
+    else 0
+    end as organic_percent
+  , case 
+    WHEN variants.style ilike '%rustic%' THEN ((count(variants.style) * 100 / float4(users_pv_count.user_pv_count)) )::numeric(7,2) 
+    else 0
+    end as rustic_percent
+  , case 
+    WHEN variants.style ilike '%scandinavian%' THEN ((count(variants.style) * 100 / float4(users_pv_count.user_pv_count)) )::numeric(7,2) 
+    else 0
+    end as scandinavian_percent
+  , case 
+    WHEN variants.style ilike '%shabby%' THEN ((count(variants.style) * 100 / float4(users_pv_count.user_pv_count)) )::numeric(7,2) 
+    else 0
+    end as shabby_percent
+  , case 
+    WHEN variants.style ilike '%southwest%' THEN ((count(variants.style) * 100 / float4(users_pv_count.user_pv_count)) )::numeric(7,2) 
+    else 0
+    end as southwest_percent
+  , case 
+    WHEN variants.style ilike '%traditional%' THEN ((count(variants.style) * 100 / float4(users_pv_count.user_pv_count)) )::numeric(7,2) 
+    else 0
+    end as traditional_percent
+INTO periscope_bi.user_sku_pv_percents
+from
+  snowplow.kinesisdata as events
+  left join dotandbobi.users on
+    events.userid = dotandbobi.users.user_id
+  left join dotandbobi.variants as variants on
+    events.sku = variants.sku
+  left join users_pv_count on
+    users_pv_count.user_id = dotandbobi.users.user_id
+  left join periscope_bi.sku_style_from_variants as sku_style_from_variants on
+    events.sku = sku_style_from_variants.sku
+  where
+    (
+      events.eventname ILIKE 'Page View'
+    )
+    AND events.sku IS NOT NULL
+    AND dotandbobi.users.user_id IS NOT NULL
+GROUP BY
+1
+, 2
+, 3
+, 4
+HAVING
+users_pv_count.user_pv_count > 0
+
+
+=== Calculate User’s SKU A2Cs as % of User’s Total A2Cs
+
+with users_atc_count as (
+    select
+      events.userid as user_id
+      , count(events.userid) as user_atc_count
+    from
+      snowplow.kinesisdata as events
+    where
+      events.sku is not null
+      and events.userid is not null
+      and events.sku is not null
+      and (
+        events.eventname ILIKE 'Add to Cart'
+      )
+    group by
+      events.userid
+)
+
+select
+  dotandbobi.users.user_id
+  , variants.sku
+  , variants.style
+  , users_atc_count.user_atc_count as user_total_atcs
+  , count(variants.style) as user_sku_atc_count
+  , case 
+    WHEN variants.style ilike '%boho%' THEN ((count(variants.style) * 100 / float4(users_atc_count.user_atc_count)))::numeric(7,2) 
+    else 0
+    end as boho_percent
+  , case 
+    WHEN variants.style ilike '%contemporary%' THEN ((count(variants.style) * 100 / float4(users_atc_count.user_atc_count)))::numeric(7,2)
+    else 0
+    end as contemporary_percent
+  , case 
+    WHEN variants.style ilike '%eclectic%' THEN ((count(variants.style) * 100 / float4(users_atc_count.user_atc_count)))::numeric(7,2) 
+    else 0
+    end as eclectic_percent
+  , case 
+    WHEN variants.style ilike '%industrial%' THEN ((count(variants.style) * 100 / float4(users_atc_count.user_atc_count)) )::numeric(7,2)
+    else 0
+    end as industrial_percent
+  , case 
+    WHEN variants.style ilike '%mid-century%' THEN ((count(variants.style) * 100 / float4(users_atc_count.user_atc_count)) )::numeric(7,2) 
+    else 0
+    end as mid_century_percent
+  , case 
+    WHEN variants.style ilike '%modern%' THEN ((count(variants.style) * 100 / float4(users_atc_count.user_atc_count)) )::numeric(7,2)
+    else 0
+    end as modern_percent
+  , case 
+    WHEN variants.style ilike '%organic%' THEN ((count(variants.style) * 100 / float4(users_atc_count.user_atc_count)) )::numeric(7,2) 
+    else 0
+    end as organic_percent
+  , case 
+    WHEN variants.style ilike '%rustic%' THEN ((count(variants.style) * 100 / float4(users_atc_count.user_atc_count)) )::numeric(7,2) 
+    else 0
+    end as rustic_percent
+  , case 
+    WHEN variants.style ilike '%scandinavian%' THEN ((count(variants.style) * 100 / float4(users_atc_count.user_atc_count)) )::numeric(7,2) 
+    else 0
+    end as scandinavian_percent
+  , case 
+    WHEN variants.style ilike '%shabby%' THEN ((count(variants.style) * 100 / float4(users_atc_count.user_atc_count)) )::numeric(7,2) 
+    else 0
+    end as shabby_percent
+  , case 
+    WHEN variants.style ilike '%southwest%' THEN ((count(variants.style) * 100 / float4(users_atc_count.user_atc_count)) )::numeric(7,2) 
+    else 0
+    end as southwest_percent
+  , case 
+    WHEN variants.style ilike '%traditional%' THEN ((count(variants.style) * 100 / float4(users_atc_count.user_atc_count)) )::numeric(7,2) 
+    else 0
+    end as traditional_percent
+INTO periscope_bi.user_sku_atc_percents
+from
+  snowplow.kinesisdata as events
+  left join dotandbobi.users on
+    events.userid = dotandbobi.users.user_id
+  left join dotandbobi.variants as variants on
+    events.sku = variants.sku
+  left join users_atc_count on
+    users_atc_count.user_id = dotandbobi.users.user_id
+  left join periscope_bi.sku_style_from_variants as sku_style_from_variants on
+    events.sku = sku_style_from_variants.sku
+  where
+    (
+      events.eventname ILIKE 'Add to Cart'
+    )
+    and events.sku is not null
+    and dotandbobi.users.user_id is not null
+group by
+1
+, 2
+, 3
+, 4
+having
+users_atc_count.user_atc_count > 0
+
+
+=== Calculate User’s SKU Purchases as % of User’s Total Purchases
+
+WITH users_purchase_count AS
+(
+  SELECT orders.user_id AS user_id,
+         SUM(line_items.quantity) AS user_purchase_count
+  FROM dotandbobi.orders AS orders
+    LEFT JOIN dotandbobi.line_items AS line_items ON orders.order_id = line_items.order_id
+  GROUP BY orders.user_id
+)
+SELECT orders.user_id,
+       variants.sku,
+       variants.style,
+       users_purchase_count.user_purchase_count AS user_total_purchases,
+       SUM(line_items.quantity) AS user_sku_purchase_count,
+       CASE
+         WHEN variants.style ilike '%boho%' THEN ((SUM(line_items.quantity)*100 / float4 (users_purchase_count.user_purchase_count)))::NUMERIC(7,2)
+         ELSE 0
+       END AS boho_percent,
+       CASE
+         WHEN variants.style ilike '%contemporary%' THEN ((SUM(line_items.quantity)*100 / float4 (users_purchase_count.user_purchase_count)))::NUMERIC(7,2)
+         ELSE 0
+       END AS contemporary_percent,
+       CASE
+         WHEN variants.style ilike '%eclectic%' THEN ((SUM(line_items.quantity)*100 / float4 (users_purchase_count.user_purchase_count)))::NUMERIC(7,2)
+         ELSE 0
+       END AS eclectic_percent,
+       CASE
+         WHEN variants.style ilike '%industrial%' THEN ((SUM(line_items.quantity)*100 / float4 (users_purchase_count.user_purchase_count)))::NUMERIC(7,2)
+         ELSE 0
+       END AS industrial_percent,
+       CASE
+         WHEN variants.style ilike '%mid-century%' THEN ((SUM(line_items.quantity)*100 / float4 (users_purchase_count.user_purchase_count)))::NUMERIC(7,2)
+         ELSE 0
+       END AS mid_century_percent,
+       CASE
+         WHEN variants.style ilike '%modern%' THEN ((SUM(line_items.quantity)*100 / float4 (users_purchase_count.user_purchase_count)))::NUMERIC(7,2)
+         ELSE 0
+       END AS modern_percent,
+       CASE
+         WHEN variants.style ilike '%organic%' THEN ((SUM(line_items.quantity)*100 / float4 (users_purchase_count.user_purchase_count)))::NUMERIC(7,2)
+         ELSE 0
+       END AS organic_percent,
+       CASE
+         WHEN variants.style ilike '%rustic%' THEN ((SUM(line_items.quantity)*100 / float4 (users_purchase_count.user_purchase_count)))::NUMERIC(7,2)
+         ELSE 0
+       END AS rustic_percent,
+       CASE
+         WHEN variants.style ilike '%scandinavian%' THEN ((SUM(line_items.quantity)*100 / float4 (users_purchase_count.user_purchase_count)))::NUMERIC(7,2)
+         ELSE 0
+       END AS scandinavian_percent,
+       CASE
+         WHEN variants.style ilike '%shabby%' THEN ((SUM(line_items.quantity)*100 / float4 (users_purchase_count.user_purchase_count)))::NUMERIC(7,2)
+         ELSE 0
+       END AS shabby_percent,
+       CASE
+         WHEN variants.style ilike '%southwest%' THEN ((SUM(line_items.quantity)*100 / float4 (users_purchase_count.user_purchase_count)))::NUMERIC(7,2)
+         ELSE 0
+       END AS southwest_percent,
+       CASE
+         WHEN variants.style ilike '%traditional%' THEN ((SUM(line_items.quantity)*100 / float4 (users_purchase_count.user_purchase_count)))::NUMERIC(7,2)
+         ELSE 0
+       END AS traditional_percent INTO periscope_bi.user_sku_purchases_percents
+FROM dotandbobi.orders AS orders
+  LEFT JOIN dotandbobi.line_items AS line_items ON orders.order_id = line_items.order_id
+  LEFT JOIN dotandbobi.variants AS variants ON line_items.sku = variants.sku
+  LEFT JOIN users_purchase_count ON users_purchase_count.user_id = orders.user_id
+GROUP BY 1,
+         2,
+         3,
+         4
+HAVING users_purchase_count.user_purchase_count > 0
+
+
+=== Multiply User Sku level PV % by SKU Style %
+
+SELECT user_sku_pv_percents.user_id,
+       user_sku_pv_percents.sku,
+       user_sku_pv_percents.style,
+       user_sku_pv_percents.user_total_pvs,
+       user_sku_pv_percents.user_sku_pv_count,
+       ((user_sku_pv_percents.boho_percent*sku_style_from_variants.boho_percent) / 100)::NUMERIC(7,2) AS boho_percent,
+       ((user_sku_pv_percents.contemporary_percent*sku_style_from_variants.contemporary_percent) / 100)::NUMERIC(7,2) AS contemporary_percent,
+       ((user_sku_pv_percents.eclectic_percent*sku_style_from_variants.eclectic_percent) / 100)::NUMERIC(7,2) AS eclectic_percent,
+       ((user_sku_pv_percents.industrial_percent*sku_style_from_variants.industrial_percent) / 100)::NUMERIC(7,2) AS industrial_percent,
+       ((user_sku_pv_percents.mid_century_percent*sku_style_from_variants.mid_century_percent) / 100)::NUMERIC(7,2) AS mid_century_percent,
+       ((user_sku_pv_percents.modern_percent*sku_style_from_variants.modern_percent) / 100)::NUMERIC(7,2) AS modern_percent,
+       ((user_sku_pv_percents.organic_percent*sku_style_from_variants.organic_percent) / 100)::NUMERIC(7,2) AS organic_percent,
+       ((user_sku_pv_percents.rustic_percent*sku_style_from_variants.rustic_percent) / 100)::NUMERIC(7,2) AS rustic_percent,
+       ((user_sku_pv_percents.scandinavian_percent*sku_style_from_variants.scandinavian_percent) / 100)::NUMERIC(7,2) AS scandinavian_percent,
+       ((user_sku_pv_percents.shabby_percent*sku_style_from_variants.shabby_chic_percent) / 100)::NUMERIC(7,2) AS shabby_percent,
+       ((user_sku_pv_percents.southwest_percent*sku_style_from_variants.southwest_percent) / 100)::NUMERIC(7,2) AS southwest_percent,
+       ((user_sku_pv_percents.traditional_percent*sku_style_from_variants.traditional_percent) / 100)::NUMERIC(7,2) AS traditional_percent
+INTO periscope_bi.user_sku_pv_style_percents
+FROM periscope_bi.user_sku_pv_percents AS user_sku_pv_percents
+  LEFT JOIN periscope_bi.sku_style_from_variants AS sku_style_from_variants ON user_sku_pv_percents.sku = sku_style_from_variants.sku
+
+
+=== Multiply User Sku level AtC % by SKU Style %
+
+SELECT user_sku_atc_percents.user_id,
+       user_sku_atc_percents.sku,
+       user_sku_atc_percents.style,
+       user_sku_atc_percents.user_total_atcs,
+       user_sku_atc_percents.user_sku_atc_count,
+       ((user_sku_atc_percents.boho_percent*sku_style_from_variants.boho_percent) / 100)::NUMERIC(7,2) AS boho_percent,
+       ((user_sku_atc_percents.contemporary_percent*sku_style_from_variants.contemporary_percent) / 100)::NUMERIC(7,2) AS contemporary_percent,
+       ((user_sku_atc_percents.eclectic_percent*sku_style_from_variants.eclectic_percent) / 100)::NUMERIC(7,2) AS eclectic_percent,
+       ((user_sku_atc_percents.industrial_percent*sku_style_from_variants.industrial_percent) / 100)::NUMERIC(7,2) AS industrial_percent,
+       ((user_sku_atc_percents.mid_century_percent*sku_style_from_variants.mid_century_percent) / 100)::NUMERIC(7,2) AS mid_century_percent,
+       ((user_sku_atc_percents.modern_percent*sku_style_from_variants.modern_percent) / 100)::NUMERIC(7,2) AS modern_percent,
+       ((user_sku_atc_percents.organic_percent*sku_style_from_variants.organic_percent) / 100)::NUMERIC(7,2) AS organic_percent,
+       ((user_sku_atc_percents.rustic_percent*sku_style_from_variants.rustic_percent) / 100)::NUMERIC(7,2) AS rustic_percent,
+       ((user_sku_atc_percents.scandinavian_percent*sku_style_from_variants.scandinavian_percent) / 100)::NUMERIC(7,2) AS scandinavian_percent,
+       ((user_sku_atc_percents.shabby_percent*sku_style_from_variants.shabby_chic_percent) / 100)::NUMERIC(7,2) AS shabby_percent,
+       ((user_sku_atc_percents.southwest_percent*sku_style_from_variants.southwest_percent) / 100)::NUMERIC(7,2) AS southwest_percent,
+       ((user_sku_atc_percents.traditional_percent*sku_style_from_variants.traditional_percent) / 100)::NUMERIC(7,2) AS traditional_percent
+INTO periscope_bi.user_sku_atc_style_percents
+FROM periscope_bi.user_sku_atc_percents AS user_sku_atc_percents
+  LEFT JOIN periscope_bi.sku_style_from_variants AS sku_style_from_variants ON user_sku_atc_percents.sku = sku_style_from_variants.sku
+
+
+=== Multiply User Sku level Purchases % by SKU Style %
+
+SELECT user_sku_purchases_percents.user_id,
+       user_sku_purchases_percents.sku,
+       user_sku_purchases_percents.style,
+       user_sku_purchases_percents.user_total_purchases,
+       user_sku_purchases_percents.user_sku_purchase_count,
+       ((user_sku_purchases_percents.boho_percent*sku_style_from_variants.boho_percent) / 100)::NUMERIC(7,2) AS boho_percent,
+       ((user_sku_purchases_percents.contemporary_percent*sku_style_from_variants.contemporary_percent) / 100)::NUMERIC(7,2) AS contemporary_percent,
+       ((user_sku_purchases_percents.eclectic_percent*sku_style_from_variants.eclectic_percent) / 100)::NUMERIC(7,2) AS eclectic_percent,
+       ((user_sku_purchases_percents.industrial_percent*sku_style_from_variants.industrial_percent) / 100)::NUMERIC(7,2) AS industrial_percent,
+       ((user_sku_purchases_percents.mid_century_percent*sku_style_from_variants.mid_century_percent) / 100)::NUMERIC(7,2) AS mid_century_percent,
+       ((user_sku_purchases_percents.modern_percent*sku_style_from_variants.modern_percent) / 100)::NUMERIC(7,2) AS modern_percent,
+       ((user_sku_purchases_percents.organic_percent*sku_style_from_variants.organic_percent) / 100)::NUMERIC(7,2) AS organic_percent,
+       ((user_sku_purchases_percents.rustic_percent*sku_style_from_variants.rustic_percent) / 100)::NUMERIC(7,2) AS rustic_percent,
+       ((user_sku_purchases_percents.scandinavian_percent*sku_style_from_variants.scandinavian_percent) / 100)::NUMERIC(7,2) AS scandinavian_percent,
+       ((user_sku_purchases_percents.shabby_percent*sku_style_from_variants.shabby_chic_percent) / 100)::NUMERIC(7,2) AS shabby_percent,
+       ((user_sku_purchases_percents.southwest_percent*sku_style_from_variants.southwest_percent) / 100)::NUMERIC(7,2) AS southwest_percent,
+       ((user_sku_purchases_percents.traditional_percent*sku_style_from_variants.traditional_percent) / 100)::NUMERIC(7,2) AS traditional_percent
+INTO periscope_bi.user_sku_purchases_style_percents
+FROM periscope_bi.user_sku_purchases_percents AS user_sku_purchases_percents
+  LEFT JOIN periscope_bi.sku_style_from_variants AS sku_style_from_variants ON user_sku_purchases_percents.sku = sku_style_from_variants.sku
+
+
+=== Group User PV Style %s
+
+SELECT pv.user_id,
+       pv.user_total_pvs,
+       SUM(pv.boho_percent) AS boho_percent,
+       SUM(pv.contemporary_percent) AS contemporary_percent,
+       SUM(pv.eclectic_percent) AS eclectic_percent,
+       SUM(pv.industrial_percent) AS industrial_percent,
+       SUM(pv.mid_century_percent) AS mid_century_percent,
+       SUM(pv.modern_percent) AS modern_percent,
+       SUM(pv.organic_percent) AS organic_percent,
+       SUM(pv.rustic_percent) AS rustic_percent,
+       SUM(pv.scandinavian_percent) AS scandinavian_percent,
+       SUM(pv.shabby_percent) AS shabby_percent,
+       SUM(pv.southwest_percent) AS southwest_percent,
+       SUM(pv.traditional_percent) AS traditional_percent INTO periscope_bi.users_style_from_pv
+FROM periscope_bi.user_sku_pv_style_percents AS pv
+GROUP BY 1,
+         2
+
+
+=== Group User ATC Style %s
+
+SELECT atc.user_id,
+       atc.user_total_atcs,
+       SUM(atc.boho_percent) AS boho_percent,
+       SUM(atc.contemporary_percent) AS contemporary_percent,
+       SUM(atc.eclectic_percent) AS eclectic_percent,
+       SUM(atc.industrial_percent) AS industrial_percent,
+       SUM(atc.mid_century_percent) AS mid_century_percent,
+       SUM(atc.modern_percent) AS modern_percent,
+       SUM(atc.organic_percent) AS organic_percent,
+       SUM(atc.rustic_percent) AS rustic_percent,
+       SUM(atc.scandinavian_percent) AS scandinavian_percent,
+       SUM(atc.shabby_percent) AS shabby_percent,
+       SUM(atc.southwest_percent) AS southwest_percent,
+       SUM(atc.traditional_percent) AS traditional_percent INTO periscope_bi.users_style_from_atc
+FROM periscope_bi.user_sku_atc_style_percents AS atc
+GROUP BY 1,
+         2
+
+
+=== Group User Purchase Style %s
+
+SELECT purchases.user_id,
+       purchases.user_total_purchases,
+       SUM(purchases.boho_percent) AS boho_percent,
+       SUM(purchases.contemporary_percent) AS contemporary_percent,
+       SUM(purchases.eclectic_percent) AS eclectic_percent,
+       SUM(purchases.industrial_percent) AS industrial_percent,
+       SUM(purchases.mid_century_percent) AS mid_century_percent,
+       SUM(purchases.modern_percent) AS modern_percent,
+       SUM(purchases.organic_percent) AS organic_percent,
+       SUM(purchases.rustic_percent) AS rustic_percent,
+       SUM(purchases.scandinavian_percent) AS scandinavian_percent,
+       SUM(purchases.shabby_percent) AS shabby_percent,
+       SUM(purchases.southwest_percent) AS southwest_percent,
+       SUM(purchases.traditional_percent) AS traditional_percent 
+
+INTO periscope_bi.users_style_from_purchases
+FROM periscope_bi.user_sku_purchases_style_percents AS purchases
+GROUP BY 1,
+         2
+
+
+=== User Style % Rollup from Events(pvs, atcs, purchases)
+
+SELECT pv.user_id,
+       (((ISNULL (0.2*pv.boho_percent,0) + ISNULL (0.3*atc.boho_percent,0) + ISNULL (0.5*purchases.boho_percent,0)) /(ISNULL (0.2*pv.boho_percent,0) + ISNULL (0.3*atc.boho_percent,0) + ISNULL (0.5*purchases.boho_percent,0) + ISNULL (0.2*pv.contemporary_percent,0) + ISNULL (0.3*atc.contemporary_percent,0) + ISNULL (0.5*purchases.contemporary_percent,0) + ISNULL (0.2*pv.eclectic_percent,0) + ISNULL (0.3*atc.eclectic_percent,0) + ISNULL (0.5*purchases.eclectic_percent,0) + ISNULL (0.2*pv.industrial_percent,0) + ISNULL (0.3*atc.industrial_percent,0) + ISNULL (0.5*purchases.industrial_percent,0) + ISNULL (0.2*pv.mid_century_percent,0) + ISNULL (0.3*atc.mid_century_percent,0) + ISNULL (0.5*purchases.mid_century_percent,0) + ISNULL (0.2*pv.modern_percent,0) + ISNULL (0.3*atc.modern_percent,0) + ISNULL (0.5*purchases.modern_percent,0) + ISNULL (0.2*pv.organic_percent,0) + ISNULL (0.3*atc.organic_percent,0) + ISNULL (0.5*purchases.organic_percent,0) + ISNULL (0.2*pv.rustic_percent,0) + ISNULL (0.3*atc.rustic_percent,0) + ISNULL (0.5*purchases.rustic_percent,0) + ISNULL (0.2*pv.scandinavian_percent,0) + ISNULL (0.3*atc.scandinavian_percent,0) + ISNULL (0.5*purchases.scandinavian_percent,0) + ISNULL (0.2*pv.shabby_percent,0) + ISNULL (0.3*atc.shabby_percent,0) + ISNULL (0.5*purchases.shabby_percent,0) + ISNULL (0.2*pv.southwest_percent,0) + ISNULL (0.3*atc.southwest_percent,0) + ISNULL (0.5*purchases.southwest_percent,0) + ISNULL (0.2*pv.traditional_percent,0) + ISNULL (0.3*atc.traditional_percent,0) + ISNULL (0.5*purchases.traditional_percent,0)))*100)::NUMERIC(7,2) AS boho_percent,
+       (((ISNULL (0.2*pv.contemporary_percent,0) + ISNULL (0.3*atc.contemporary_percent,0) + ISNULL (0.5*purchases.contemporary_percent,0)) /(ISNULL (0.2*pv.boho_percent,0) + ISNULL (0.3*atc.boho_percent,0) + ISNULL (0.5*purchases.boho_percent,0) + ISNULL (0.2*pv.contemporary_percent,0) + ISNULL (0.3*atc.contemporary_percent,0) + ISNULL (0.5*purchases.contemporary_percent,0) + ISNULL (0.2*pv.eclectic_percent,0) + ISNULL (0.3*atc.eclectic_percent,0) + ISNULL (0.5*purchases.eclectic_percent,0) + ISNULL (0.2*pv.industrial_percent,0) + ISNULL (0.3*atc.industrial_percent,0) + ISNULL (0.5*purchases.industrial_percent,0) + ISNULL (0.2*pv.mid_century_percent,0) + ISNULL (0.3*atc.mid_century_percent,0) + ISNULL (0.5*purchases.mid_century_percent,0) + ISNULL (0.2*pv.modern_percent,0) + ISNULL (0.3*atc.modern_percent,0) + ISNULL (0.5*purchases.modern_percent,0) + ISNULL (0.2*pv.organic_percent,0) + ISNULL (0.3*atc.organic_percent,0) + ISNULL (0.5*purchases.organic_percent,0) + ISNULL (0.2*pv.rustic_percent,0) + ISNULL (0.3*atc.rustic_percent,0) + ISNULL (0.5*purchases.rustic_percent,0) + ISNULL (0.2*pv.scandinavian_percent,0) + ISNULL (0.3*atc.scandinavian_percent,0) + ISNULL (0.5*purchases.scandinavian_percent,0) + ISNULL (0.2*pv.shabby_percent,0) + ISNULL (0.3*atc.shabby_percent,0) + ISNULL (0.5*purchases.shabby_percent,0) + ISNULL (0.2*pv.southwest_percent,0) + ISNULL (0.3*atc.southwest_percent,0) + ISNULL (0.5*purchases.southwest_percent,0) + ISNULL (0.2*pv.traditional_percent,0) + ISNULL (0.3*atc.traditional_percent,0) + ISNULL (0.5*purchases.traditional_percent,0)))*100)::NUMERIC(7,2) AS contemporary_percent,
+       (((ISNULL (0.2*pv.eclectic_percent,0) + ISNULL (0.3*atc.eclectic_percent,0) + ISNULL (0.5*purchases.eclectic_percent,0)) /(ISNULL (0.2*pv.boho_percent,0) + ISNULL (0.3*atc.boho_percent,0) + ISNULL (0.5*purchases.boho_percent,0) + ISNULL (0.2*pv.contemporary_percent,0) + ISNULL (0.3*atc.contemporary_percent,0) + ISNULL (0.5*purchases.contemporary_percent,0) + ISNULL (0.2*pv.eclectic_percent,0) + ISNULL (0.3*atc.eclectic_percent,0) + ISNULL (0.5*purchases.eclectic_percent,0) + ISNULL (0.2*pv.industrial_percent,0) + ISNULL (0.3*atc.industrial_percent,0) + ISNULL (0.5*purchases.industrial_percent,0) + ISNULL (0.2*pv.mid_century_percent,0) + ISNULL (0.3*atc.mid_century_percent,0) + ISNULL (0.5*purchases.mid_century_percent,0) + ISNULL (0.2*pv.modern_percent,0) + ISNULL (0.3*atc.modern_percent,0) + ISNULL (0.5*purchases.modern_percent,0) + ISNULL (0.2*pv.organic_percent,0) + ISNULL (0.3*atc.organic_percent,0) + ISNULL (0.5*purchases.organic_percent,0) + ISNULL (0.2*pv.rustic_percent,0) + ISNULL (0.3*atc.rustic_percent,0) + ISNULL (0.5*purchases.rustic_percent,0) + ISNULL (0.2*pv.scandinavian_percent,0) + ISNULL (0.3*atc.scandinavian_percent,0) + ISNULL (0.5*purchases.scandinavian_percent,0) + ISNULL (0.2*pv.shabby_percent,0) + ISNULL (0.3*atc.shabby_percent,0) + ISNULL (0.5*purchases.shabby_percent,0) + ISNULL (0.2*pv.southwest_percent,0) + ISNULL (0.3*atc.southwest_percent,0) + ISNULL (0.5*purchases.southwest_percent,0) + ISNULL (0.2*pv.traditional_percent,0) + ISNULL (0.3*atc.traditional_percent,0) + ISNULL (0.5*purchases.traditional_percent,0)))*100)::NUMERIC(7,2) AS eclectic_percent,
+       (((ISNULL (0.2*pv.industrial_percent,0) + ISNULL (0.3*atc.industrial_percent,0) + ISNULL (0.5*purchases.industrial_percent,0)) /(ISNULL (0.2*pv.boho_percent,0) + ISNULL (0.3*atc.boho_percent,0) + ISNULL (0.5*purchases.boho_percent,0) + ISNULL (0.2*pv.contemporary_percent,0) + ISNULL (0.3*atc.contemporary_percent,0) + ISNULL (0.5*purchases.contemporary_percent,0) + ISNULL (0.2*pv.eclectic_percent,0) + ISNULL (0.3*atc.eclectic_percent,0) + ISNULL (0.5*purchases.eclectic_percent,0) + ISNULL (0.2*pv.industrial_percent,0) + ISNULL (0.3*atc.industrial_percent,0) + ISNULL (0.5*purchases.industrial_percent,0) + ISNULL (0.2*pv.mid_century_percent,0) + ISNULL (0.3*atc.mid_century_percent,0) + ISNULL (0.5*purchases.mid_century_percent,0) + ISNULL (0.2*pv.modern_percent,0) + ISNULL (0.3*atc.modern_percent,0) + ISNULL (0.5*purchases.modern_percent,0) + ISNULL (0.2*pv.organic_percent,0) + ISNULL (0.3*atc.organic_percent,0) + ISNULL (0.5*purchases.organic_percent,0) + ISNULL (0.2*pv.rustic_percent,0) + ISNULL (0.3*atc.rustic_percent,0) + ISNULL (0.5*purchases.rustic_percent,0) + ISNULL (0.2*pv.scandinavian_percent,0) + ISNULL (0.3*atc.scandinavian_percent,0) + ISNULL (0.5*purchases.scandinavian_percent,0) + ISNULL (0.2*pv.shabby_percent,0) + ISNULL (0.3*atc.shabby_percent,0) + ISNULL (0.5*purchases.shabby_percent,0) + ISNULL (0.2*pv.southwest_percent,0) + ISNULL (0.3*atc.southwest_percent,0) + ISNULL (0.5*purchases.southwest_percent,0) + ISNULL (0.2*pv.traditional_percent,0) + ISNULL (0.3*atc.traditional_percent,0) + ISNULL (0.5*purchases.traditional_percent,0)))*100)::NUMERIC(7,2) AS industrial_percent,
+       (((ISNULL (0.2*pv.mid_century_percent,0) + ISNULL (0.3*atc.mid_century_percent,0) + ISNULL (0.5*purchases.mid_century_percent,0)) /(ISNULL (0.2*pv.boho_percent,0) + ISNULL (0.3*atc.boho_percent,0) + ISNULL (0.5*purchases.boho_percent,0) + ISNULL (0.2*pv.contemporary_percent,0) + ISNULL (0.3*atc.contemporary_percent,0) + ISNULL (0.5*purchases.contemporary_percent,0) + ISNULL (0.2*pv.eclectic_percent,0) + ISNULL (0.3*atc.eclectic_percent,0) + ISNULL (0.5*purchases.eclectic_percent,0) + ISNULL (0.2*pv.industrial_percent,0) + ISNULL (0.3*atc.industrial_percent,0) + ISNULL (0.5*purchases.industrial_percent,0) + ISNULL (0.2*pv.mid_century_percent,0) + ISNULL (0.3*atc.mid_century_percent,0) + ISNULL (0.5*purchases.mid_century_percent,0) + ISNULL (0.2*pv.modern_percent,0) + ISNULL (0.3*atc.modern_percent,0) + ISNULL (0.5*purchases.modern_percent,0) + ISNULL (0.2*pv.organic_percent,0) + ISNULL (0.3*atc.organic_percent,0) + ISNULL (0.5*purchases.organic_percent,0) + ISNULL (0.2*pv.rustic_percent,0) + ISNULL (0.3*atc.rustic_percent,0) + ISNULL (0.5*purchases.rustic_percent,0) + ISNULL (0.2*pv.scandinavian_percent,0) + ISNULL (0.3*atc.scandinavian_percent,0) + ISNULL (0.5*purchases.scandinavian_percent,0) + ISNULL (0.2*pv.shabby_percent,0) + ISNULL (0.3*atc.shabby_percent,0) + ISNULL (0.5*purchases.shabby_percent,0) + ISNULL (0.2*pv.southwest_percent,0) + ISNULL (0.3*atc.southwest_percent,0) + ISNULL (0.5*purchases.southwest_percent,0) + ISNULL (0.2*pv.traditional_percent,0) + ISNULL (0.3*atc.traditional_percent,0) + ISNULL (0.5*purchases.traditional_percent,0)))*100)::NUMERIC(7,2) AS mid_century_percent,
+       (((ISNULL (0.2*pv.modern_percent,0) + ISNULL (0.3*atc.modern_percent,0) + ISNULL (0.5*purchases.modern_percent,0)) /(ISNULL (0.2*pv.boho_percent,0) + ISNULL (0.3*atc.boho_percent,0) + ISNULL (0.5*purchases.boho_percent,0) + ISNULL (0.2*pv.contemporary_percent,0) + ISNULL (0.3*atc.contemporary_percent,0) + ISNULL (0.5*purchases.contemporary_percent,0) + ISNULL (0.2*pv.eclectic_percent,0) + ISNULL (0.3*atc.eclectic_percent,0) + ISNULL (0.5*purchases.eclectic_percent,0) + ISNULL (0.2*pv.industrial_percent,0) + ISNULL (0.3*atc.industrial_percent,0) + ISNULL (0.5*purchases.industrial_percent,0) + ISNULL (0.2*pv.mid_century_percent,0) + ISNULL (0.3*atc.mid_century_percent,0) + ISNULL (0.5*purchases.mid_century_percent,0) + ISNULL (0.2*pv.modern_percent,0) + ISNULL (0.3*atc.modern_percent,0) + ISNULL (0.5*purchases.modern_percent,0) + ISNULL (0.2*pv.organic_percent,0) + ISNULL (0.3*atc.organic_percent,0) + ISNULL (0.5*purchases.organic_percent,0) + ISNULL (0.2*pv.rustic_percent,0) + ISNULL (0.3*atc.rustic_percent,0) + ISNULL (0.5*purchases.rustic_percent,0) + ISNULL (0.2*pv.scandinavian_percent,0) + ISNULL (0.3*atc.scandinavian_percent,0) + ISNULL (0.5*purchases.scandinavian_percent,0) + ISNULL (0.2*pv.shabby_percent,0) + ISNULL (0.3*atc.shabby_percent,0) + ISNULL (0.5*purchases.shabby_percent,0) + ISNULL (0.2*pv.southwest_percent,0) + ISNULL (0.3*atc.southwest_percent,0) + ISNULL (0.5*purchases.southwest_percent,0) + ISNULL (0.2*pv.traditional_percent,0) + ISNULL (0.3*atc.traditional_percent,0) + ISNULL (0.5*purchases.traditional_percent,0)))*100)::NUMERIC(7,2) AS modern_percent,
+       (((ISNULL (0.2*pv.organic_percent,0) + ISNULL (0.3*atc.organic_percent,0) + ISNULL (0.5*purchases.organic_percent,0)) /(ISNULL (0.2*pv.boho_percent,0) + ISNULL (0.3*atc.boho_percent,0) + ISNULL (0.5*purchases.boho_percent,0) + ISNULL (0.2*pv.contemporary_percent,0) + ISNULL (0.3*atc.contemporary_percent,0) + ISNULL (0.5*purchases.contemporary_percent,0) + ISNULL (0.2*pv.eclectic_percent,0) + ISNULL (0.3*atc.eclectic_percent,0) + ISNULL (0.5*purchases.eclectic_percent,0) + ISNULL (0.2*pv.industrial_percent,0) + ISNULL (0.3*atc.industrial_percent,0) + ISNULL (0.5*purchases.industrial_percent,0) + ISNULL (0.2*pv.mid_century_percent,0) + ISNULL (0.3*atc.mid_century_percent,0) + ISNULL (0.5*purchases.mid_century_percent,0) + ISNULL (0.2*pv.modern_percent,0) + ISNULL (0.3*atc.modern_percent,0) + ISNULL (0.5*purchases.modern_percent,0) + ISNULL (0.2*pv.organic_percent,0) + ISNULL (0.3*atc.organic_percent,0) + ISNULL (0.5*purchases.organic_percent,0) + ISNULL (0.2*pv.rustic_percent,0) + ISNULL (0.3*atc.rustic_percent,0) + ISNULL (0.5*purchases.rustic_percent,0) + ISNULL (0.2*pv.scandinavian_percent,0) + ISNULL (0.3*atc.scandinavian_percent,0) + ISNULL (0.5*purchases.scandinavian_percent,0) + ISNULL (0.2*pv.shabby_percent,0) + ISNULL (0.3*atc.shabby_percent,0) + ISNULL (0.5*purchases.shabby_percent,0) + ISNULL (0.2*pv.southwest_percent,0) + ISNULL (0.3*atc.southwest_percent,0) + ISNULL (0.5*purchases.southwest_percent,0) + ISNULL (0.2*pv.traditional_percent,0) + ISNULL (0.3*atc.traditional_percent,0) + ISNULL (0.5*purchases.traditional_percent,0)))*100)::NUMERIC(7,2) AS organic_percent,
+       (((ISNULL (0.2*pv.rustic_percent,0) + ISNULL (0.3*atc.rustic_percent,0) + ISNULL (0.5*purchases.rustic_percent,0)) /(ISNULL (0.2*pv.boho_percent,0) + ISNULL (0.3*atc.boho_percent,0) + ISNULL (0.5*purchases.boho_percent,0) + ISNULL (0.2*pv.contemporary_percent,0) + ISNULL (0.3*atc.contemporary_percent,0) + ISNULL (0.5*purchases.contemporary_percent,0) + ISNULL (0.2*pv.eclectic_percent,0) + ISNULL (0.3*atc.eclectic_percent,0) + ISNULL (0.5*purchases.eclectic_percent,0) + ISNULL (0.2*pv.industrial_percent,0) + ISNULL (0.3*atc.industrial_percent,0) + ISNULL (0.5*purchases.industrial_percent,0) + ISNULL (0.2*pv.mid_century_percent,0) + ISNULL (0.3*atc.mid_century_percent,0) + ISNULL (0.5*purchases.mid_century_percent,0) + ISNULL (0.2*pv.modern_percent,0) + ISNULL (0.3*atc.modern_percent,0) + ISNULL (0.5*purchases.modern_percent,0) + ISNULL (0.2*pv.organic_percent,0) + ISNULL (0.3*atc.organic_percent,0) + ISNULL (0.5*purchases.organic_percent,0) + ISNULL (0.2*pv.rustic_percent,0) + ISNULL (0.3*atc.rustic_percent,0) + ISNULL (0.5*purchases.rustic_percent,0) + ISNULL (0.2*pv.scandinavian_percent,0) + ISNULL (0.3*atc.scandinavian_percent,0) + ISNULL (0.5*purchases.scandinavian_percent,0) + ISNULL (0.2*pv.shabby_percent,0) + ISNULL (0.3*atc.shabby_percent,0) + ISNULL (0.5*purchases.shabby_percent,0) + ISNULL (0.2*pv.southwest_percent,0) + ISNULL (0.3*atc.southwest_percent,0) + ISNULL (0.5*purchases.southwest_percent,0) + ISNULL (0.2*pv.traditional_percent,0) + ISNULL (0.3*atc.traditional_percent,0) + ISNULL (0.5*purchases.traditional_percent,0)))*100)::NUMERIC(7,2) AS rustic_percent,
+       (((ISNULL (0.2*pv.scandinavian_percent,0) + ISNULL (0.3*atc.scandinavian_percent,0) + ISNULL (0.5*purchases.scandinavian_percent,0)) /(ISNULL (0.2*pv.boho_percent,0) + ISNULL (0.3*atc.boho_percent,0) + ISNULL (0.5*purchases.boho_percent,0) + ISNULL (0.2*pv.contemporary_percent,0) + ISNULL (0.3*atc.contemporary_percent,0) + ISNULL (0.5*purchases.contemporary_percent,0) + ISNULL (0.2*pv.eclectic_percent,0) + ISNULL (0.3*atc.eclectic_percent,0) + ISNULL (0.5*purchases.eclectic_percent,0) + ISNULL (0.2*pv.industrial_percent,0) + ISNULL (0.3*atc.industrial_percent,0) + ISNULL (0.5*purchases.industrial_percent,0) + ISNULL (0.2*pv.mid_century_percent,0) + ISNULL (0.3*atc.mid_century_percent,0) + ISNULL (0.5*purchases.mid_century_percent,0) + ISNULL (0.2*pv.modern_percent,0) + ISNULL (0.3*atc.modern_percent,0) + ISNULL (0.5*purchases.modern_percent,0) + ISNULL (0.2*pv.organic_percent,0) + ISNULL (0.3*atc.organic_percent,0) + ISNULL (0.5*purchases.organic_percent,0) + ISNULL (0.2*pv.rustic_percent,0) + ISNULL (0.3*atc.rustic_percent,0) + ISNULL (0.5*purchases.rustic_percent,0) + ISNULL (0.2*pv.scandinavian_percent,0) + ISNULL (0.3*atc.scandinavian_percent,0) + ISNULL (0.5*purchases.scandinavian_percent,0) + ISNULL (0.2*pv.shabby_percent,0) + ISNULL (0.3*atc.shabby_percent,0) + ISNULL (0.5*purchases.shabby_percent,0) + ISNULL (0.2*pv.southwest_percent,0) + ISNULL (0.3*atc.southwest_percent,0) + ISNULL (0.5*purchases.southwest_percent,0) + ISNULL (0.2*pv.traditional_percent,0) + ISNULL (0.3*atc.traditional_percent,0) + ISNULL (0.5*purchases.traditional_percent,0)))*100)::NUMERIC(7,2) AS scandinavian_percent,
+       (((ISNULL (0.2*pv.shabby_percent,0) + ISNULL (0.3*atc.shabby_percent,0) + ISNULL (0.5*purchases.shabby_percent,0)) /(ISNULL (0.2*pv.boho_percent,0) + ISNULL (0.3*atc.boho_percent,0) + ISNULL (0.5*purchases.boho_percent,0) + ISNULL (0.2*pv.contemporary_percent,0) + ISNULL (0.3*atc.contemporary_percent,0) + ISNULL (0.5*purchases.contemporary_percent,0) + ISNULL (0.2*pv.eclectic_percent,0) + ISNULL (0.3*atc.eclectic_percent,0) + ISNULL (0.5*purchases.eclectic_percent,0) + ISNULL (0.2*pv.industrial_percent,0) + ISNULL (0.3*atc.industrial_percent,0) + ISNULL (0.5*purchases.industrial_percent,0) + ISNULL (0.2*pv.mid_century_percent,0) + ISNULL (0.3*atc.mid_century_percent,0) + ISNULL (0.5*purchases.mid_century_percent,0) + ISNULL (0.2*pv.modern_percent,0) + ISNULL (0.3*atc.modern_percent,0) + ISNULL (0.5*purchases.modern_percent,0) + ISNULL (0.2*pv.organic_percent,0) + ISNULL (0.3*atc.organic_percent,0) + ISNULL (0.5*purchases.organic_percent,0) + ISNULL (0.2*pv.rustic_percent,0) + ISNULL (0.3*atc.rustic_percent,0) + ISNULL (0.5*purchases.rustic_percent,0) + ISNULL (0.2*pv.scandinavian_percent,0) + ISNULL (0.3*atc.scandinavian_percent,0) + ISNULL (0.5*purchases.scandinavian_percent,0) + ISNULL (0.2*pv.shabby_percent,0) + ISNULL (0.3*atc.shabby_percent,0) + ISNULL (0.5*purchases.shabby_percent,0) + ISNULL (0.2*pv.southwest_percent,0) + ISNULL (0.3*atc.southwest_percent,0) + ISNULL (0.5*purchases.southwest_percent,0) + ISNULL (0.2*pv.traditional_percent,0) + ISNULL (0.3*atc.traditional_percent,0) + ISNULL (0.5*purchases.traditional_percent,0)))*100)::NUMERIC(7,2) AS shabby_percent,
+       (((ISNULL (0.2*pv.southwest_percent,0) + ISNULL (0.3*atc.southwest_percent,0) + ISNULL (0.5*purchases.southwest_percent,0)) /(ISNULL (0.2*pv.boho_percent,0) + ISNULL (0.3*atc.boho_percent,0) + ISNULL (0.5*purchases.boho_percent,0) + ISNULL (0.2*pv.contemporary_percent,0) + ISNULL (0.3*atc.contemporary_percent,0) + ISNULL (0.5*purchases.contemporary_percent,0) + ISNULL (0.2*pv.eclectic_percent,0) + ISNULL (0.3*atc.eclectic_percent,0) + ISNULL (0.5*purchases.eclectic_percent,0) + ISNULL (0.2*pv.industrial_percent,0) + ISNULL (0.3*atc.industrial_percent,0) + ISNULL (0.5*purchases.industrial_percent,0) + ISNULL (0.2*pv.mid_century_percent,0) + ISNULL (0.3*atc.mid_century_percent,0) + ISNULL (0.5*purchases.mid_century_percent,0) + ISNULL (0.2*pv.modern_percent,0) + ISNULL (0.3*atc.modern_percent,0) + ISNULL (0.5*purchases.modern_percent,0) + ISNULL (0.2*pv.organic_percent,0) + ISNULL (0.3*atc.organic_percent,0) + ISNULL (0.5*purchases.organic_percent,0) + ISNULL (0.2*pv.rustic_percent,0) + ISNULL (0.3*atc.rustic_percent,0) + ISNULL (0.5*purchases.rustic_percent,0) + ISNULL (0.2*pv.scandinavian_percent,0) + ISNULL (0.3*atc.scandinavian_percent,0) + ISNULL (0.5*purchases.scandinavian_percent,0) + ISNULL (0.2*pv.shabby_percent,0) + ISNULL (0.3*atc.shabby_percent,0) + ISNULL (0.5*purchases.shabby_percent,0) + ISNULL (0.2*pv.southwest_percent,0) + ISNULL (0.3*atc.southwest_percent,0) + ISNULL (0.5*purchases.southwest_percent,0) + ISNULL (0.2*pv.traditional_percent,0) + ISNULL (0.3*atc.traditional_percent,0) + ISNULL (0.5*purchases.traditional_percent,0)))*100)::NUMERIC(7,2) AS southwest_percent,
+       (((ISNULL (0.2*pv.traditional_percent,0) + ISNULL (0.3*atc.traditional_percent,0) + ISNULL (0.5*purchases.traditional_percent,0)) /(ISNULL (0.2*pv.boho_percent,0) + ISNULL (0.3*atc.boho_percent,0) + ISNULL (0.5*purchases.boho_percent,0) + ISNULL (0.2*pv.contemporary_percent,0) + ISNULL (0.3*atc.contemporary_percent,0) + ISNULL (0.5*purchases.contemporary_percent,0) + ISNULL (0.2*pv.eclectic_percent,0) + ISNULL (0.3*atc.eclectic_percent,0) + ISNULL (0.5*purchases.eclectic_percent,0) + ISNULL (0.2*pv.industrial_percent,0) + ISNULL (0.3*atc.industrial_percent,0) + ISNULL (0.5*purchases.industrial_percent,0) + ISNULL (0.2*pv.mid_century_percent,0) + ISNULL (0.3*atc.mid_century_percent,0) + ISNULL (0.5*purchases.mid_century_percent,0) + ISNULL (0.2*pv.modern_percent,0) + ISNULL (0.3*atc.modern_percent,0) + ISNULL (0.5*purchases.modern_percent,0) + ISNULL (0.2*pv.organic_percent,0) + ISNULL (0.3*atc.organic_percent,0) + ISNULL (0.5*purchases.organic_percent,0) + ISNULL (0.2*pv.rustic_percent,0) + ISNULL (0.3*atc.rustic_percent,0) + ISNULL (0.5*purchases.rustic_percent,0) + ISNULL (0.2*pv.scandinavian_percent,0) + ISNULL (0.3*atc.scandinavian_percent,0) + ISNULL (0.5*purchases.scandinavian_percent,0) + ISNULL (0.2*pv.shabby_percent,0) + ISNULL (0.3*atc.shabby_percent,0) + ISNULL (0.5*purchases.shabby_percent,0) + ISNULL (0.2*pv.southwest_percent,0) + ISNULL (0.3*atc.southwest_percent,0) + ISNULL (0.5*purchases.southwest_percent,0) + ISNULL (0.2*pv.traditional_percent,0) + ISNULL (0.3*atc.traditional_percent,0) + ISNULL (0.5*purchases.traditional_percent,0)))*100)::NUMERIC(7,2) AS traditional_percent INTO periscope_bi.users_style_percent
+FROM periscope_bi.users_style_from_pv AS pv
+  LEFT JOIN periscope_bi.users_style_from_atc AS atc ON pv.user_id = atc.user_id
+  LEFT JOIN periscope_bi.users_style_from_purchases AS purchases ON purchases.user_id = pv.user_id
+
+
+where  (pv.boho_percent+pv.contemporary_percent+pv.eclectic_percent+pv.industrial_percent+pv.mid_century_percent+pv.modern_percent+pv.organic_percent+pv.rustic_percent+pv.scandinavian_percent+pv.shabby_percent+pv.southwest_percent+pv.traditional_percent) > 0
+
